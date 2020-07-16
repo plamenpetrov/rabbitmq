@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  rabbitmq-consumer:
+    container_name: rabbitmq-consumer
+    image: rabbitmq-consumer:latest
+    env_file:
+      - rabbitmq-consumer/.env
+    build:
+      args:
+        USER: 'php-app'
+        UID: '1000'
+      context: rabbitmq-consumer/
+      target: development
+      dockerfile: Dockerfile
+    volumes:
+      -  ./rabbitmq-consumer:/var/www/html
+
+  nginx-server-rabbitmq-consumer:
+    image: nginx:stable-alpine
+    container_name: nginx-server-rabbitmq-consumer
+    depends_on:
+      - rabbitmq-consumer
+    volumes:
+      - ./rabbitmq-consumer:/var/www/html
+      - ./rabbitmq-consumer/var/log/nginx:/var/log/nginx
+      - ./rabbitmq-consumer/docker/app/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./rabbitmq-consumer/docker/app/nginx/logging.conf:/etc/nginx/conf.d/logging.conf
+    ports:
+      - 81:80

@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  rabbitmq-producer:
+    container_name: rabbitmq-producer
+    image: rabbitmq-producer:latest
+    env_file:
+      - rabbitmq-producer/.env
+    build:
+      args:
+        USER: 'php-app'
+        UID: '1000'
+      context: rabbitmq-producer/
+      target: development
+      dockerfile: Dockerfile
+    volumes:
+      -  ./rabbitmq-producer:/var/www/html
+
+  nginx-server-rabbitmq:
+    image: nginx:stable-alpine
+    container_name: nginx-server-rabbitmq
+    depends_on:
+      - rabbitmq-producer
+    volumes:
+      - ./rabbitmq-producer:/var/www/html
+      - ./rabbitmq-producer/var/log/nginx:/var/log/nginx
+      - ./rabbitmq-producer/docker/app/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./rabbitmq-producer/docker/app/nginx/logging.conf:/etc/nginx/conf.d/logging.conf
+    ports:
+      - 80:80
